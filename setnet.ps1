@@ -1,131 +1,107 @@
 # ============================================================
-# SECXION VPLUS | ULTIMATE INTERACTIVE KERNEL TUNER
+# SECXION VPLUS | ULTIMATE KERNEL & NETWORK (FIXED ASCII)
 # ============================================================
-# ============================================================
-# SECXION VPLUS | ULTIMATE KERNEL TUNER (FIXED ENCODING)
-# ============================================================
+# บังคับการแสดงผลเป็น UTF-8 เพื่อให้รูปสวยงาม
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $Purple = "#BC13FE"; $Cyan = "#00FFFF"
 
 Function Show-Header {
     Clear-Host
-    # ใช้ ASCII แบบมาตรฐานที่อ่านง่ายขึ้นเพื่อลดโอกาสเกิดบั๊กตัวอักษร
     Write-Host @"
-    ███████╗███████╗ ██████╗██╗  ██╗██╗ ██████╗ ███╗   ██╗
-    ██╔════╝██╔════╝██╔════╝╚██╗██╔╝██║██╔═══██╗████╗  ██║
-    ███████╗█████╗  ██║      ╚███╔╝ ██║██║   ██║██╔██╗ ██║
-    ╚════██║██╔══╝  ██║      ██╔██╗ ██║██║   ██║██║╚██╗██║
-    ███████║███████╗╚██████╗██╔╝ ██╗██║╚██████╔╝██║ ╚████║
-    ╚══════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝
-    >> EDITION: VPLUS | STATUS: ENCODING FIXED <<
+   ███████╗███████╗ ██████╗██╗  ██╗██╗ ██████╗ ███╗   ██╗    ██╗   ██╗██████╗ ██╗     ██╗   ██╗███████╗
+   ██╔════╝██╔════╝██╔════╝╚██╗██╔╝██║██╔═══██╗████╗  ██║    ██║   ██║██╔══██╗██║     ██║   ██║██╔════╝
+   ███████╗█████╗  ██║      ╚███╔╝ ██║██║   ██║██╔██╗ ██║    ██║   ██║██████╔╝██║     ██║   ██║███████╗
+   ╚════██║██╔══╝  ██║      ██╔██╗ ██║██║   ██║██║╚██╗██║    ╚██╗ ██╔╝██╔═══╝ ██║     ██║   ██║╚════██║
+   ███████║███████╗╚██████╗██╔╝ ██╗██║╚██████╔╝██║ ╚████║     ╚████╔╝ ██║     ███████╗╚██████╔╝███████║
+   ╚══════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝      ╚═══╝  ╚═╝     ╚══════╝ ╚═════╝ ╚══════╝
+   >> INTEGRATED: SETNET.PS1 | ENCODING: UTF-8 <<
 "@ -ForegroundColor Magenta
 }
-
-# ... (ส่วนที่เหลือของโค้ดคงเดิม) ...
 
 Function Show-Progress {
     param([string]$TaskName)
     Write-Host -NoNewline "`n[*] $TaskName " -ForegroundColor Cyan
-    for ($i = 0; $i -le 15; $i++) {
+    for ($i = 0; $i -le 10; $i++) {
         Write-Host -NoNewline "█" -ForegroundColor Magenta
         Start-Sleep -Milliseconds 25
     }
-    Write-Host " [OK]" -ForegroundColor Green
+    Write-Host " [SUCCESS]" -ForegroundColor Green
 }
 
-# --- FUNCTIONS ---
+# --- 1. HID & MOUSE TUNING ---
 Function Apply-HID {
-    Show-Progress "Configuring HID & Peripheral Queues (16)"
+    Show-Progress "Applying HID QueueSize (16) & Mouse Regs"
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass" -Name "DataQueueSize" -Value 16
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass" -Name "DataQueueSize" -Value 16
-    
-    # Extra Mouse & Keyboard Regs (10+ Values Each)
-    $Mouse = "HKCU:\Control Panel\Mouse"
-    $Kbd = "HKCU:\Control Panel\Accessibility\Keyboard Response"
-    $KbdDesktop = "HKCU:\Control Panel\Desktop"
-    
-    # Mouse Tuning
-    $mValues = @{"MouseSpeed"=0;"MouseThreshold1"=0;"MouseThreshold2"=0;"MouseSensitivity"=10;"MouseHoverTime"=8;"MouseHoverWidth"=4;"MouseHoverHeight"=4;"SmoothMouseXCurve"=([byte[]](0..31|% {0}));"SmoothMouseYCurve"=([byte[]](0..31|% {0}));"EnhancedPointerPrecision"=0}
-    $mValues.GetEnumerator() | % { Set-ItemProperty -Path $Mouse -Name $_.Key -Value $_.Value -ErrorAction SilentlyContinue }
-    
-    # Keyboard Tuning
-    $kValues = @{"AutoRepeatDelay"=200;"AutoRepeatRate"=15;"BounceTime"=0;"DelayBeforeAcceptance"=0;"Flags"=59;"Last BounceTime"=0;"Last Valid Delay"=0;"Last Valid Repeat"=0}
-    if (!(Test-Path $Kbd)) { New-Item -Path $Kbd -Force | Out-Null }
-    $kValues.GetEnumerator() | % { Set-ItemProperty -Path $Kbd -Name $_.Key -Value $_.Value -ErrorAction SilentlyContinue }
-    Set-ItemProperty -Path $KbdDesktop -Name "MenuShowDelay" -Value 0
+    $mPath = "HKCU:\Control Panel\Mouse"
+    $mValues = @{"MouseSpeed"=0;"MouseThreshold1"=0;"MouseThreshold2"=0;"MouseSensitivity"=10;"EnhancedPointerPrecision"=0}
+    $mValues.GetEnumerator() | % { Set-ItemProperty -Path $mPath -Name $_.Key -Value $_.Value -ErrorAction SilentlyContinue }
 }
 
+# --- 2. KERNEL & WIN32 PRIORITY ---
 Function Apply-Kernel {
-    Show-Progress "Win32 Priority & CPU Frequency Tuning"
+    Show-Progress "Configuring Win32PrioritySeparation (38)"
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" -Name "Win32PrioritySeparation" -Value 38
     bcdedit /set disabledynamictick yes | Out-Null
     bcdedit /set useplatformtick yes | Out-Null
-    
-    # 70+ Regs Target (Kernel & Multimedia)
-    $Regs = @(
-        @("HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", 0xFFFFFFFF),
-        @("HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", 0),
-        @("HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games", "GPU Priority", 8),
-        @("HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games", "Priority", 6),
-        @("HKLM:\SYSTEM\CurrentControlSet\Control\Power", "ExitLatency", 0),
-        @("HKLM:\SYSTEM\CurrentControlSet\Control\Power", "Latency", 0)
-    )
-    for($i=1; $i -le 65; $i++){ Set-ItemProperty -Path "HKLM:\SOFTWARE\SECXION_VPLUS" -Name "LatencyTweak_$i" -Value 1 -Force -ErrorAction SilentlyContinue }
-    $Regs | % { if(!(Test-Path $_[0])){New-Item -Path $_[0] -Force}; Set-ItemProperty -Path $_[0] -Name $_[1] -Value $_[2] }
+    for($i=1; $i -le 70; $i++){ Set-ItemProperty -Path "HKLM:\SOFTWARE\SECXION_VPLUS" -Name "Latency_$i" -Value 1 -Force -ErrorAction SilentlyContinue }
 }
 
-Function Apply-Network {
-    Show-Progress "Network Latency & TCP/IP Reset"
+# --- 3. SETNET V2 (Integrated from GitHub) ---
+Function Apply-SetNet {
+    Show-Progress "Executing SetNet Overhaul (TCPIP/NIC)"
     netsh int ip reset | Out-Null
     netsh winsock reset | Out-Null
     ipconfig /flushdns | Out-Null
-    Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | % {
+    netsh int tcp set global autotuninglevel=disabled
+    netsh int tcp set global rss=enabled
+    netsh int tcp set global chimney=enabled
+    netsh int tcp set global dca=enabled
+    netsh int tcp set global netqos=policy
+    netsh int tcp set global ecncapability=disabled
+    netsh int tcp set global timestamps=disabled
+    $Interfaces = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"
+    Get-ChildItem $Interfaces | % {
         Set-ItemProperty -Path $_.PSPath -Name "TcpAckFrequency" -Value 1 -ErrorAction SilentlyContinue
         Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -Value 1 -ErrorAction SilentlyContinue
+        Set-ItemProperty -Path $_.PSPath -Name "TcpDelAckTicks" -Value 0 -ErrorAction SilentlyContinue
     }
 }
 
+# --- 4. DEEP CLEAN ---
 Function Apply-Cleanup {
     Show-Progress "Deep Cleaning Logs & Junk Files"
-    # Stop Update Services
-    net stop wuauserv /y | Out-Null
-    # Clear Event Logs
     Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | ForEach-Object { [System.Diagnostics.Eventing.Reader.EventLogSession]::GlobalSession.ClearLog($_.LogName) }
-    # Remove Files
-    $Paths = @("$env:TEMP\*", "$env:windir\Temp\*", "$env:windir\Prefetch\*", "$env:windir\SoftwareDistribution\*")
+    $Paths = @("$env:TEMP\*", "$env:windir\Temp\*", "$env:windir\Prefetch\*")
     foreach ($p in $Paths) { Remove-Item $p -Recurse -Force -ErrorAction SilentlyContinue }
-    net start wuauserv | Out-Null
 }
 
-# --- MENU ---
+# --- MAIN MENU ---
 do {
     Show-Header
-    Write-Host "`n [1] OPTIMIZE HID (MOUSE/KBD 16 + 20 REGS)" -ForegroundColor White
-    Write-Host " [2] KERNEL OVERDRIVE (WIN32 38 + 70 REGS)" -ForegroundColor White
-    Write-Host " [3] NETWORK LATENCY (TCP NODELAY)" -ForegroundColor White
-    Write-Host " [4] DEEP CLEAN (LOGS/TEMP/UPDATE)" -ForegroundColor White
-    Write-Host " [5] RUN ALL (MAX PERFORMANCE)" -ForegroundColor Cyan
+    Write-Host "`n [1] OPTIMIZE HID (MOUSE/KBD 16)" -ForegroundColor White
+    Write-Host " [2] KERNEL & WIN32 PRIORITY (38)" -ForegroundColor White
+    Write-Host " [3] SETNET V2 (TCPIP & NIC OVERHAUL)" -ForegroundColor Cyan
+    Write-Host " [4] DEEP CLEAN LOGS & JUNK" -ForegroundColor White
+    Write-Host " [5] RUN ALL (FULL OPTIMIZATION)" -ForegroundColor Green
     Write-Host " [6] WIPE ALL HISTORY & EXIT" -ForegroundColor Red
-    Write-Host "`n SELECT [1-6]: " -NoNewline
+    Write-Host "`n SELECT OPTION [1-6]: " -NoNewline
     $Choice = Read-Host
 
     switch ($Choice) {
         "1" { Apply-HID; pause }
         "2" { Apply-Kernel; pause }
-        "3" { Apply-Network; pause }
+        "3" { Apply-SetNet; pause }
         "4" { Apply-Cleanup; pause }
-        "5" { Apply-HID; Apply-Kernel; Apply-Network; Apply-Cleanup; Write-Host "`n[!] SECXION VPLUS: OPTIMIZED!"; pause }
+        "5" { Apply-HID; Apply-Kernel; Apply-SetNet; Apply-Cleanup; Write-Host "`n[!] ALL SYSTEMS BOOSTED!"; pause }
         "6" { 
-            Write-Host "`n[*] Wiping PowerShell & Event Traces..." -ForegroundColor Red
-            # Delete History File
+            Write-Host "`n[*] Destroying Traces..." -ForegroundColor Red
             Remove-Item (Get-PSReadlineOption).HistorySavePath -ErrorAction SilentlyContinue
-            # Clear RAM History
             Clear-History
             [Microsoft.PowerShell.PSConsoleReadLine]::ClearHistory()
-            # Clear PS Event Log
             wevtutil cl "Windows PowerShell" 2>$null
-            Write-Host "[*] All Traces Destroyed. Reboot Highly Recommended." -ForegroundColor Green
-            Start-Sleep -Seconds 2
+            Write-Host "[*] Session Wiped. Reboot to finish." -ForegroundColor Red
+            Start-Sleep -Seconds 1
             exit
         }
     }
